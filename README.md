@@ -23,7 +23,7 @@ The library consists of:
 ## REST API Request Flow
 
 ```mermaid
-flowchart TD
+graph TD;
     A[Client or Frontend] -->|HTTP Request (GET, POST, etc.)| B[WordPress REST API Endpoint]
     B -->|Matches URL wp-json api v1 etc| C[Router]
     C --> D[Controller (AppController)]
