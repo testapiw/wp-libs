@@ -174,6 +174,11 @@ register_rest_route('auth/v1', '/login', [
 - Easily extensible (interceptors, retries, query params)
 
 
+## Documentation
+
+- [Server-side REST API Architecture](SERVER_API.md) - Detailed documentation of the PHP backend API structure.
+
+
 ## License
 
 MIT

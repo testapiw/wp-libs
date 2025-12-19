@@ -5,16 +5,33 @@ The system is built on top of the **WordPress REST API**, with a custom controll
 
 ---
 
+## Table of Contents
+
+- [Overview](#overview)
+- [REST API Request Flow](#rest-api-request-flow)
+- [Key Components](#key-components)
+- [Flow Summary](#flow-summary)
+- [BaseController](#basecontroller)
+- [Router](#router)
+- [Example: AppController](#example-appcontroller)
+- [Validation via ApplicationException](#validation-via-applicationexception)
+- [Expected Request Headers](#expected-request-headers)
+- [Standard Success Response](#standard-success-response)
+- [Best Practices Used](#best-practices-used)
+- [Related Documentation](#related-documentation)
+- [License](#license)
+
+---
+
 ## Overview
 
 The REST API layer consists of:
 
 - `BaseController` — abstract base class for all REST controllers
 - `Router` — centralized REST route registrar
-- Domain controllers (`CoinsController`, `RecompositionController`, etc.)
+- Domain controllers (`AppController`)
 - Unified exception & error handling
 - Role-based access control
-- Separate Auth REST endpoints (`auth/v1`)
 
 ---
 
@@ -24,7 +41,7 @@ The REST API layer consists of:
 ```mermaid
 flowchart TD
     A[Client / Frontend] -->|HTTP Request (GET / POST / etc.)| B[WordPress REST API Endpoint]
-    B -->|Matches URL /wp-json/app/v1/...| C[Router]
+    B -->|Matches URL /wp-json/api/v1/...| C[Router]
     C --> D[Controller (AppController)]
     D --> E[BaseController]
     E --> F[Callback Logic in AppController]
@@ -176,9 +193,9 @@ Each controller returns routes as an array:
 ```php
 [
     'namespace'     => 'api/v1',
-    'route'         => '/coins/list',
+    'route'         => '/data/list',
     'methods'       => 'POST',
-    'callback'      => [$this, 'get_coins_list'],
+    'callback'      => [$this, 'get_data_list'],
     'permission_callback' => [$this, 'check_permissions'], // optional
     'show_in_index' => false,
     'args'          => [],
@@ -187,47 +204,78 @@ Each controller returns routes as an array:
 
 If permission_callback is not specified, BaseController::check_permissions() is used by default.
 
-## Request Type Detection
-
-The TypeRequest helper class classifies incoming requests.
-
-Location
-
-```php
-App/Kernel/Http/TypeRequest.php
-```
-
-## Supported types
-
-- AJAX
-- JSON
-- REST
-- XMLRPC
-- DEFAULT
-
-```php
-TypeRequest::classifyRequest();
-```
-
-Example: CoinsController
+## Example: AppController
 Location
 
 ```php
 App/Controllers/AppController.php
 ```
 
+### Routes defined in AppController
+
+```php
+public function get_routes(): array
+{
+    return [
+        [
+            'namespace' => 'api/v1',
+            'route'     => '/data/list',
+            'methods'   => 'POST',
+            'callback'  => [$this, 'get_data_list'],
+            'show_in_index' => false,
+        ],
+        [
+            'namespace' => 'api/v1',
+            'route'     => '/data/edit',
+            'methods'   => 'POST',
+            'callback'  => [$this, 'data_edit'],
+            'show_in_index' => false,
+        ],
+        [
+            'namespace' => 'api/v1',
+            'route'     => '/data/analytics',
+            'methods'   => 'GET',
+            'callback'  => [$this, 'get_analytics'],
+            'show_in_index' => false,
+        ],
+        [
+            'namespace' => 'api/v1',
+            'route'     => '/data/log',
+            'methods'   => 'POST',
+            'callback'  => [$this, 'get_data_log'],
+            'show_in_index' => false,
+        ],
+    ];
+}
+```
 
 ## Example handler
 ```php
-public function get_data(WP_REST_Request $request): WP_REST_Response
+public function get_data_list(WP_REST_Request $request): WP_REST_Response
 {
     $params = $request->get_params();
 
-    $data = [];
+    $results = []; // Business logic here
 
     return new WP_REST_Response([
         'success' => true,
-        'data'    => $data,
+        'data' => $results
+    ], 200);
+}
+```
+
+Another example:
+```php
+public function get_analytics(WP_REST_Request $request): WP_REST_Response
+{
+    $analytics = new AnalyticService(); // Assuming service exists
+    $results = $analytics->getUpdateDate();
+
+    return new WP_REST_Response([
+        'success' => true,
+        'data' => [
+            'update' => $results,
+        ]
     ], 200);
 }
 ```
@@ -243,30 +291,6 @@ if (!is_numeric($index) || (int)$index <= 0) {
 ```
 
 ## Automatically converted to a 400 REST response.
-
-Auth REST API (Separate Module)
-
-Authentication endpoints are not part of the main Router and are registered manually.
-
-
-Example: Signup permission check
-```php
-'permission_callback' => function () {
-
-    if (is_user_logged_in()) {
-        return new WP_Error('unauthorized', 'You are already logged in', ['status' => 400]);
-    }
-
-    if (
-        !isset($_SERVER['HTTP_X_WP_NONCE']) ||
-        !wp_verify_nonce($_SERVER['HTTP_X_WP_NONCE'], 'wp_rest')
-    ) {
-        return new WP_Error('invalid_nonce', 'Invalid or expired nonce', ['status' => 403]);
-    }
-
-    return true;
-}
-```
 
 ## Expected Request Headers
 
