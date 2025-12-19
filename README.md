@@ -24,35 +24,13 @@ The library consists of:
 
 ```mermaid
 graph TD;
-    A[Client or Frontend] -->|HTTP Request (GET, POST)| B[WordPress REST API Endpoint]
+    A[Client or Frontend] -->|HTTP Request (GET, POST, etc.)| B[WordPress REST API Endpoint]
     B -->|Matches URL wp-json api v1 etc| C[Router]
     C --> D[Controller (AppController)]
     D --> E[BaseController]
     E --> F[Callback Logic in AppController]
     F --> G[Response Handling]
     G --> A
-
-    subgraph RouterSub [Router]
-        C1[Checks if request URI belongs to custom API]
-        C2[Initializes controller instances (e.g., AppController)]
-        C3[Registers routes via register_rest_route()]
-    end
-
-    subgraph BaseControllerSub [BaseController]
-        E1[Wraps callbacks in handle() method]
-        E2[Centralized error handling: ApplicationException to handlerApplicationError(), Throwable to handlerSystemError()]
-        E3[Permission checks via check_permissions()]
-    end
-
-    subgraph CallbackSub [Callback Logic]
-        F1[Actual business logic (e.g., fetching data, updating)]
-        F2[Returns WP_REST_Response with data or success status]
-    end
-
-    subgraph ResponseSub [Response Handling]
-        G1[If exception occurs: ExceptionHandler.handle(), dispatches ExceptionEvent, logs via LoggerAdapter]
-        G2[If no exception: Returns WP_REST_Response to WordPress, JSON response sent to client]
-    end
 ```
 
 ---
