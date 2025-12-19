@@ -71,8 +71,6 @@ You can use `wp_localize_script` to provide REST URLs, nonces, and configuration
 wp_localize_script('wp-libs-js', 'wpLibsConfig', [
     'api_base'   => rest_url('wp/v2'), // WordPress REST API base
     'nonce'      => wp_create_nonce('wp_rest'),
-    'user_roles' => wp_get_current_user()->roles,
-    'vue_data'   => [ /* Data for Vue components */ ]
 ]);
 ```
 
@@ -86,52 +84,9 @@ const Request = new window.wplibs.Request({
 
 ## Vue.js and Bootstrap Integration
 
-wp-libs supports native Vue.js 3 components with Bootstrap 5 styling for building modern WordPress admin interfaces.
+wp-libs supports native Vue.js 3 components with Bootstrap 5 styling for building modern WordPress admin interfaces. Components are defined in JavaScript and can use external templates or inline.
 
-### Example Vue Component
-```js
-// In js/vue-components.js
-const { createApp } = Vue;
 
-const DataListComponent = {
-    template: `
-        <div class="container">
-            <div class="row">
-                <div class="col-md-12">
-                    <h3 class="mb-3">Data List</h3>
-                    <button class="btn btn-primary" @click="loadData">Load Data</button>
-                    <ul class="list-group mt-3" v-if="items.length">
-                        <li class="list-group-item" v-for="item in items" :key="item.id">
-                            {{ item.title }}
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    `,
-    data() {
-        return {
-            items: []
-        };
-    },
-    methods: {
-        async loadData() {
-            try {
-                const response = await Request.get('data/list');
-                if (response.success) {
-                    this.items = response.data;
-                }
-            } catch (error) {
-                console.error('Error loading data:', error);
-            }
-        }
-    }
-};
-
-// Mount the app
-const app = createApp(DataListComponent);
-app.mount('#wp-libs-data-list');
-```
 
 ### WordPress Integration
 ```php
@@ -154,16 +109,6 @@ The PHP backend follows DDD principles with a layered architecture:
 - **Infrastructure Layer**: Controllers, repositories, and external integrations.
 - **Presentation Layer**: REST API endpoints with BaseController.
 
-### Example Service (Application Layer)
-```php
-// In src/Services/AnalyticService.php
-class AnalyticService {
-    public function getUpdateDate() {
-        // Domain logic for analytics
-        return date('Y-m-d H:i:s');
-    }
-}
-```
 
 ### Controller Integration
 ```php
