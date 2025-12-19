@@ -24,8 +24,8 @@ The library consists of:
 
 ```mermaid
 graph TD;
-    A[Client or Frontend] -->|HTTP Request (GET, POST, etc.)| B[WordPress REST API Endpoint]
-    B -->|Matches URL wp-json api v1 etc| C[Router]
+    A[Client or Frontend] --> B[WordPress REST API Endpoint]
+    B --> C[Router]
     C --> D[Controller (AppController)]
     D --> E[BaseController]
     E --> F[Callback Logic in AppController]
