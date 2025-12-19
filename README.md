@@ -22,15 +22,6 @@ The library consists of:
 
 ## REST API Request Flow
 
-```mermaid
-graph TD;
-    A[Client or Frontend] --> B[WordPress REST API Endpoint]
-    B --> C[Router]
-    C --> D[Controller (AppController)]
-    D --> E[BaseController]
-    E --> F[Callback Logic in AppController]
-    F --> G[Response Handling]
-```
 
 ---
 
