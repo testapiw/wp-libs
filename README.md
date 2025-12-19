@@ -30,7 +30,6 @@ graph TD;
     D --> E[BaseController]
     E --> F[Callback Logic in AppController]
     F --> G[Response Handling]
-    G --> A
 ```
 
 ---
