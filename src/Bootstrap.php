@@ -31,7 +31,6 @@ class Bootstrap
 
         if (defined('BS_IS_ADMIN') && BS_IS_ADMIN) {
             do_action('on_admin');
-            add_action('admin_menu', [new DocdreamMenu, 'add_menu_page']);
         }
 
         if (defined('BS_IS_FRONT') && BS_IS_FRONT) {
@@ -48,7 +47,6 @@ class Bootstrap
 
         if (defined('BS_IS_REST') && BS_IS_REST) {
             new Router;
-            ConfigRepository::init($wpdb);
             add_filter('wplibs_register_controllers', [$this, 'controllers']);
             do_action('on_rest');
         }
@@ -64,8 +62,7 @@ class Bootstrap
 
     function controllers($controllers)
     {
-        if (current_user_can('manage_options')) {
-            $controllers[] = new SettingsController();            
+        if (current_user_can('manage_options')) {        
         }
         return $controllers;
     }
