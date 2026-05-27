@@ -59,12 +59,12 @@ abstract class AbstractMenu
 
     protected function enqueue_common_assets()
     {
-        wp_enqueue_style('wplibs-bootstrap-css', DDR_URL . 'assets/css/libs/bootstrap/bootstrap.min.css');
-        wp_enqueue_script('wplibs-bootstrap-js', DDR_URL . 'assets/js/libs/bootstrap/bootstrap.bundle.min.js', ['jquery'], null, true);
+        wp_enqueue_style('wplibs-bootstrap-css', WPLIBS_URL . 'assets/css/libs/bootstrap/bootstrap.min.css');
+        wp_enqueue_script('wplibs-bootstrap-js', WPLIBS_URL . 'assets/js/libs/bootstrap/bootstrap.bundle.min.js', ['jquery'], null, true);
 
         // wp_enqueue_script('vue-js', 'https://cdn.jsdelivr.net/npm/vue@3.2.47/dist/vue.global.prod.js', ['jquery'], null, true);
-        wp_enqueue_script('vue-js', DDR_URL . 'assets/js/libs/vue.global.prod.js', [], '3.2.47', true);
-        wp_enqueue_script('request-libs', DDR_URL . 'assets/js/libs/request.js', [], DDR_VER, true);
+        wp_enqueue_script('vue-js', WPLIBS_URL . 'assets/js/libs/vue.global.prod.js', [], '3.2.47', true);
+        wp_enqueue_script('request-libs', WPLIBS_URL . 'assets/js/libs/request.js', [], WPLIBS_VER, true);
     }
 
     protected function isCurrentScreen(): bool

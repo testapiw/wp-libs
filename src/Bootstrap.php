@@ -2,15 +2,12 @@
 
 namespace WpLibs;
 
-define('DDR_DIR', WP_CONTENT_DIR);
-define('DDR_URL', WP_CONTENT_URL);
-define('DDR_VER', '0.0.2');
+define('WPLIBS_DIR', WP_CONTENT_DIR . '/wp-libs/');
+define('WPLIBS_URL', WP_CONTENT_URL . '/wp-libs/');
+define('WPLIBS_VER', '0.0.2');
 
 use WpLibs\Http\Router;
 use WpLibs\RequestDetect;
-use Docdream\Menu\DocdreamMenu;
-use Docdream\Controller\SettingsController;
-use StockUpdater\Infrastructure\Persistence\ConfigRepository;
 
 class Bootstrap
 {
@@ -29,23 +26,23 @@ class Bootstrap
     private function initialize() {
         global $wpdb;
 
-        if (defined('BS_IS_ADMIN') && BS_IS_ADMIN) {
+        if (defined('WPLIBS_IS_ADMIN') && WPLIBS_IS_ADMIN) {
             do_action('on_admin');
         }
 
-        if (defined('BS_IS_FRONT') && BS_IS_FRONT) {
+        if (defined('WPLIBS_IS_FRONT') && WPLIBS_IS_FRONT) {
             do_action('on_front');
         }
 
-        if (defined('BS_IS_AJAX') && BS_IS_AJAX) {
+        if (defined('WPLIBS_IS_AJAX') && WPLIBS_IS_AJAX) {
             do_action('on_ajax');
         }
 
-        if (defined('BS_IS_CRON') && BS_IS_CRON) {
+        if (defined('WPLIBS_IS_CRON') && WPLIBS_IS_CRON) {
             do_action('on_cron');
         }
 
-        if (defined('BS_IS_REST') && BS_IS_REST) {
+        if (defined('WPLIBS_IS_REST') && WPLIBS_IS_REST) {
             new Router;
             add_filter('wplibs_register_controllers', [$this, 'controllers']);
             do_action('on_rest');
