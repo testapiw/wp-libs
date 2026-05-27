@@ -2,9 +2,9 @@
 
 namespace WpLibs;
 
-define('WP_LIBS_DIR', plugin_dir_path(dirname(__FILE__)));
-define('WP_LIBS_URL', plugin_dir_url(dirname(__FILE__)));
-define('WP_LIBS_VER', '0.0.2');
+define('DDR_DIR', WP_CONTENT_DIR);
+define('DDR_URL', WP_CONTENT_URL);
+define('DDR_VER', '0.0.2');
 
 use WpLibs\Http\Router;
 use WpLibs\RequestDetect;
