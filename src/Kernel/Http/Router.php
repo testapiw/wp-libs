@@ -19,14 +19,6 @@ class Router
      */
     public function __construct()
     {
-        // Get the current request URI
-        $route = $_SERVER['REQUEST_URI'] ?? '';
-
-        // Only proceed if the request is for our custom API namespace
-        if (strpos($route, '/wp-json/api/v1') === false) {
-            return;
-        }
-        
         $this->controllers = [];
 
         // Hook into WordPress REST API initialization to register routes

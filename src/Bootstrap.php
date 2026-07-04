@@ -24,8 +24,6 @@ class Bootstrap
     }
 
     private function initialize() {
-        global $wpdb;
-
         if (defined('WPLIBS_IS_ADMIN') && WPLIBS_IS_ADMIN) {
             do_action('on_admin');
         }
@@ -43,8 +41,11 @@ class Bootstrap
         }
 
         if (defined('WPLIBS_IS_REST') && WPLIBS_IS_REST) {
-            new Router;
-            add_filter('wplibs_register_controllers', [$this, 'controllers']);
+            if (RequestDetect::isApiNamespace('api/v1')) {
+                new Router;
+                add_filter('wplibs_register_controllers', [$this, 'controllers']);
+            }
+
             do_action('on_rest');
         }
 
