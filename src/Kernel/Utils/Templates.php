@@ -1,6 +1,6 @@
 <?php
 
-namespace WpLibs\Utils;
+namespace WpLibs\Kernel\Utils;
 
 
 // LIBS_DIR or theme root directory

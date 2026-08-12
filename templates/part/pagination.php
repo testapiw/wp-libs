@@ -18,19 +18,18 @@ if ( ! defined( 'ABSPATH' ) ) {
     </div>
     <ul class="pagination-wrapper pagination-sm justify-content-end" v-show="totalPages > 1">
 
-            <li class="page-item" @click.prevent="prevPage($event, $event)" :disabled="currentPage === 1"><a class="page-link" href="#">Prev</a></li>
+            <li class="page-item" :class="{ 'disabled': currentPage === 1 }" @click.prevent="prevPage($event, $event)"><a class="page-link" href="#">Prev</a></li>
 
             <li 
                 v-for="page in visiblePages" 
                 :key="page"
                 class="page-item"
-                :class="{ 'btn-primary': page === currentPage }"
-                :disabled="page === '...'"
+                :class="{ 'btn-primary': page === currentPage, 'disabled': page === '...' }"
                 @click.prevent="goToPage(page)">
                 <a class="page-link" href="#">{{ page }}</a>
             </li>
 
-            <li class="page-item" @click.prevent="nextPage($event)" :disabled="currentPage === totalPages"><a class="page-link" href="#">Next</a></li>
+            <li class="page-item" :class="{ 'disabled': currentPage === totalPages }" @click.prevent="nextPage($event)"><a class="page-link" href="#">Next</a></li>
     
     </ul>
 </template>

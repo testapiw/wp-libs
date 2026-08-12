@@ -22,47 +22,88 @@ The library consists of:
 
 ## REST API Request Flow
 
+```
+Browser (Vue.js)  →  XTRequest (fetch + nonce)  →  WP REST API (api/v1/*)
+                                                          │
+                                                          ▼
+                                              Router::wrap_callback()
+                                                          │
+                                                          ▼
+                                              BaseController::handle()
+                                                          │
+                                                          ▼
+                                              Controller method (e.g. get_deals)
+                                                          │
+                                                          ▼
+                                              Service (validator → builder → repository)
+                                                          │
+                                                          ▼
+                                              AbstractQuery (SQL) → wpdb
+```
 
 ---
 
 ## Installation
 
-### 1. Install via Composer (Backend)
-```bash
-composer require wp-plugins/wp-libs
-```
+### 1. Install the library
 
-### 2. Enqueue Scripts in WordPress (Frontend)
+Place the `wp-libs` directory inside `wp-content/` (next to `plugins/` and `themes/`), so the path is `wp-content/wp-libs/`.
+
+### 2. Load the autoloader via a must-use plugin
+
+Create `wp-content/mu-plugins/wp-libs.php`:
+
 ```php
-// Enqueue Vue.js and Bootstrap (if not already included)
-wp_enqueue_script('vue', 'https://cdn.jsdelivr.net/npm/vue@3', [], '3.0', true);
-wp_enqueue_style('bootstrap', 'https://cdn.jsdelivr.net/npm/bootstrap@5/dist/css/bootstrap.min.css', [], '5.0');
+<?php
+/**
+ * Plugin Name: wp-libs Loader
+ * Description: Loads the wp-libs library and boots it.
+ */
 
-// Enqueue wp-libs scripts
-wp_enqueue_script('wp-libs-js', LIBS_URL . '/js/request.js', ['vue'], LIBS_VER, true);
-wp_enqueue_script('wp-libs-vue', LIBS_URL . '/js/vue-components.js', ['vue', 'wp-libs-js'], LIBS_VER, true); // Assuming Vue components file
+require_once WP_CONTENT_DIR . '/wp-libs/vendor/autoload.php';
+
+add_action( 'plugins_loaded', function () {
+    new WpLibs\Bootstrap();
+} );
 ```
 
-### 3. Initialize in PHP
+The autoloader maps the `WpLibs\` namespace to `src/` and defines the `LIBS_DIR` constant. `Bootstrap` defines `WPLIBS_DIR`, `WPLIBS_URL` and `WPLIBS_VER`, detects the request type, and fires the `on_admin` / `on_front` / `on_ajax` / `on_cron` / `on_rest` actions.
+
+### 3. Register REST controllers
+
+Controllers are registered through the `wplibs_register_controllers` filter. The `Router` wraps every controller callback with `BaseController::handle()`, so controller methods must **not** call `handle()` themselves.
+
 ```php
-use WpLibs\Kernel\Http\Router;
-
-// Initialize the router for API endpoints
-new Router();
+add_filter( 'wplibs_register_controllers', function ( $controllers ) {
+    $controllers[] = new MyPlugin\MyController();
+    return $controllers;
+} );
 ```
 
-### 4. Client-side Initialization
+### 4. Enqueue frontend assets
+
+The library ships a REST client and two Vue components (pagination + dropdown). Enqueue them from `WPLIBS_URL`:
+
+```php
+// REST client (window.vcom.XTRequest)
+wp_enqueue_script( 'request-libs', WPLIBS_URL . 'assets/js/request.js', [], WPLIBS_VER, true );
+
+// Vue components (window.wplibs.getPagination / getDropdown)
+wp_enqueue_script( 'wplibs-pagination-js', WPLIBS_URL . 'assets/js/pagination.js', [ 'vue-js' ], WPLIBS_VER, true );
+wp_enqueue_script( 'wplibs-dropdown-js',  WPLIBS_URL . 'assets/js/dropdown.js',  [ 'vue-js' ], WPLIBS_VER, true );
+```
+
+### 5. Client-side initialization
+
 ```js
 // REST API Client
-const Request = new window.wplibs.Request({
+const Request = new window.vcom.XTRequest({
     base_url: wpApiSettings.root, // WordPress REST API base
     rest_nonce: wpApiSettings.nonce
 });
 
-// Vue.js WpLibs (example)
-const app = Vue.createApp({
-    // Your Vue components here
-});
+// Vue.js app
+const app = Vue.createApp({ /* your components */ });
 app.mount('#wp-libs-app');
 ```
 
@@ -73,17 +114,17 @@ You can use `wp_localize_script` to provide REST URLs, nonces, and configuration
 
 ### Example Localization
 ```php
-wp_localize_script('wp-libs-js', 'wpLibsConfig', [
-    'api_base'   => rest_url('wp/v2'), // WordPress REST API base
-    'nonce'      => wp_create_nonce('wp_rest'),
-]);
+wp_localize_script( 'my-plugin-js', 'myPluginConfig', [
+    'api_url' => rest_url( 'api/v1/deals/list' ),
+    'nonce'   => wp_create_nonce( 'wp_rest' ),
+] );
 ```
 
 ### Client-side API Initialization
 ```js
-const Request = new window.wplibs.Request({
-    base_url: wpLibsConfig.api_base,
-    rest_nonce: wpLibsConfig.nonce
+const Request = new window.vcom.XTRequest({
+    base_url: myPluginConfig.api_url,
+    rest_nonce: myPluginConfig.nonce
 });
 ```
 
@@ -91,43 +132,118 @@ const Request = new window.wplibs.Request({
 
 wp-libs supports native Vue.js 3 components with Bootstrap 5 styling for building modern WordPress admin interfaces. Components are defined in JavaScript and can use external templates or inline.
 
+The library ships two ready-made Vue components:
 
+- **Pagination** — `window.wplibs.getPagination()` — renders a Bootstrap pagination bar.
+- **Dropdown** — `window.wplibs.getDropdown()` — renders a Bootstrap dropdown filter.
 
-### WordPress Integration
+Register them in your app and print their templates in the admin footer:
+
+```js
+const app = Vue.createApp({ /* ... */ });
+app.component( 'pagination', window.wplibs.getPagination() );
+app.component( 'dropdown',   window.wplibs.getDropdown() );
+```
+
 ```php
-// In your plugin/theme
-function enqueue_wp_libs_scripts() {
-    wp_enqueue_script('vue', 'https://cdn.jsdelivr.net/npm/vue@3', [], '3.0', true);
-    wp_enqueue_style('bootstrap', 'https://cdn.jsdelivr.net/npm/bootstrap@5/dist/css/bootstrap.min.css', [], '5.0');
-    wp_enqueue_script('wp-libs-js', plugin_dir_url(__FILE__) . 'js/request.js', [], '1.0', true);
-    wp_enqueue_script('wp-libs-vue', plugin_dir_url(__FILE__) . 'js/vue-components.js', ['vue', 'wp-libs-js'], '1.0', true);
-}
-add_action('admin_enqueue_scripts', 'enqueue_wp_libs_scripts');
+// Print the component templates in the admin footer.
+add_action( 'admin_footer', function () {
+    echo \WpLibs\Kernel\Utils\Templates::render( 'part/pagination' );
+    echo \WpLibs\Kernel\Utils\Templates::render( 'part/dropdown' );
+} );
 ```
 
 ## Domain-Driven Design (DDD) Backend
 
 The PHP backend follows DDD principles with a layered architecture:
 
-- **Domain Layer**: Business logic and entities (e.g., User, Data models).
-- **Application Layer**: Services and use cases (e.g., AnalyticService).
+- **Domain Layer**: Business logic and entities (e.g., `DealDefinition`, `QueryObject`).
+- **Application Layer**: Services and use cases (e.g., `DealsService`).
 - **Infrastructure Layer**: Controllers, repositories, and external integrations.
-- **Presentation Layer**: REST API endpoints with BaseController.
+- **Presentation Layer**: REST API endpoints with `BaseController`.
 
+### Query pipeline
+
+For list endpoints the library provides a clean **validator → builder → repository** flow:
+
+```
+Controller → Service → QueryValidator → DealsQueryBuilder → DealsRepository → AbstractQuery → wpdb
+```
+
+1. **`QueryValidator`** (`WpLibs\Kernel\Queries\QueryValidator`) — validates and sanitizes raw request params (`page`, `per_page`, `sort_column`, `sort_order`, `filters`) against a `DefinitionInterface` schema. It derives filterable fields from `fields()`, sanitizes values by field type, and truncates strings to `max_length`.
+2. **Query builder** — converts the validated params into a `QueryObject` (filters, order, pagination).
+3. **`DealsRepository`** — executes the query via `AbstractQuery` (`runSelect()`, `runCount()`).
+4. **`AbstractQuery`** (`WpLibs\Kernel\Queries\AbstractQuery`) — extends `BaseRepository`, assembles SQL from a `QueryObject` using `QueryTrait`.
+
+### Defining a table schema
+
+```php
+use WpLibs\Kernel\Contracts\DefinitionInterface;
+
+class DealDefinition implements DefinitionInterface
+{
+    public static function fields(): array
+    {
+        return [
+            'id'          => [ 'type' => 'int',    'column' => 'id' ],
+            'deal_number' => [ 'type' => 'string', 'column' => 'deal_number', 'max_length' => 20 ],
+            'client'      => [ 'type' => 'string', 'column' => 'client',      'max_length' => 100 ],
+            'status'      => [ 'type' => 'string', 'column' => 'status',      'max_length' => 20 ],
+            'amount'      => [ 'type' => 'float',  'column' => 'amount' ],
+            'created_at'  => [ 'type' => 'string', 'column' => 'created_at',  'max_length' => 19 ],
+        ];
+    }
+
+    public static function sortable(): array
+    {
+        return self::fields();
+    }
+
+    public static function defaultSortable(): ?string
+    {
+        return 'created_at';
+    }
+}
+```
 
 ### Controller Integration
 ```php
-// In AppController.php
-public function get_analytics(WP_REST_Request $request): WP_REST_Response {
-    $analytics = new AnalyticService();
-    $results = $analytics->getUpdateDate();
-    
-    return new WP_REST_Response([
-        'success' => true,
-        'data' => ['update' => $results]
-    ], 200);
+use WpLibs\Kernel\Http\BaseController;
+
+class DealsController extends BaseController
+{
+    private DealsService $service;
+
+    public function __construct( ?LoggerInterface $logger = null )
+    {
+        parent::__construct( $logger );
+        $this->service = new DealsService( $logger );
+    }
+
+    public function get_routes(): array
+    {
+        return [
+            [
+                'namespace' => 'api/v1',
+                'route'     => '/deals/list',
+                'methods'   => 'POST',
+                'callback'  => [ $this, 'get_deals' ],
+                'show_in_index' => false,
+            ],
+        ];
+    }
+
+    public function get_deals( WP_REST_Request $request ): WP_REST_Response
+    {
+        $params = $request->get_params();
+        $data   = $this->service->getDeals( $params );
+
+        return new WP_REST_Response( array_merge( [ 'success' => true ], $data ), 200 );
+    }
 }
 ```
+
+> **Note:** The `Router` wraps every controller callback with `BaseController::handle()`. Controller methods must **not** call `handle()` themselves.
 
 This structure ensures scalability, testability, and separation of concerns.
 

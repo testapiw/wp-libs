@@ -6,7 +6,7 @@ define('WPLIBS_DIR', WP_CONTENT_DIR . '/wp-libs/');
 define('WPLIBS_URL', WP_CONTENT_URL . '/wp-libs/');
 define('WPLIBS_VER', '0.0.2');
 
-use WpLibs\Http\Router;
+use WpLibs\Kernel\Http\Router;
 use WpLibs\RequestDetect;
 
 class Bootstrap
