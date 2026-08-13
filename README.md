@@ -1,5 +1,7 @@
 # wp-libs – WordPress Extension Library with Vue.js, Bootstrap, and DDD Backend
 
+> **Demo plugin:** [wplibs-demo](https://github.com/testapiw/wplibs-demo) — a working example showcasing the library's capabilities.
+
 `wp-libs` is a comprehensive WordPress extension library that provides a modern frontend stack with **native Vue.js and Bootstrap** integration, and a robust backend architecture following **Domain-Driven Design (DDD)** principles. It includes a lightweight REST client for seamless API interactions and a structured PHP framework for building scalable WordPress plugins and themes.
 
 The library consists of:
